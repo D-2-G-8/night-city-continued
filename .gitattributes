@@ -55,6 +55,9 @@
 # Golden saves are Git LFS. Declared here so a save committed without LFS is visible
 # as a mistake rather than silently bloating history.
 tests/golden-saves/** filter=lfs diff=lfs merge=lfs -text
+# The README describing the saves is documentation, not a save. Without this line LFS
+# swaps it for a pointer on any machine that has git-lfs installed.
+tests/golden-saves/README.md !filter !diff !merge text eol=lf
 
 # Keep generated and vendored files out of language statistics and diffs.
 docs/techdoc.md linguist-documentation
