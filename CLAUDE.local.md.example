@@ -1,0 +1,8 @@
+# CLAUDE.local.md (example)
+
+Copy to `CLAUDE.local.md` — gitignored, personal only. Never commit real paths.
+
+- Game install: `D:\Games\Cyberpunk 2077`
+- Lab VM name: `lab-01`, checkpoint `clean-2.31`
+- Local model server: `http://127.0.0.1:8080`
+- Model files: `D:\models\`

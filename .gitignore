@@ -427,3 +427,27 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# --- Night City Continued ---
+
+# Personal agent notes (never commit local paths)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Lab artifacts
+lab/out/
+lab/artifacts/
+out/
+
+# Game assets and builds
+dist/
+artifacts/
+*.archive
+*.gguf
+
+# Golden saves are tracked via Git LFS, not directly
+
+# The VisualStudio template above ignores [Rr]elease/ and [Rr]eleases/ as build output.
+# Those patterns also swallow two real directories in this repository. Re-include them.
+!/releases/
+!/.claude/skills/release/

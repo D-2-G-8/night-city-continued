@@ -1,0 +1,43 @@
+# CODEOWNERS
+#
+# Who reviews what. A PR needs the review of the owner of every area it touches.
+#
+# Right now that is one person. As maintainers arrive, add them to the line for the area
+# they actually maintain — a recipe's owner is normally the mod's own author.
+
+# Default owner for everything not claimed below.
+*                           @D-2-G-8
+
+# Platform. Changes here need an RFC before code.
+/core/                      @D-2-G-8
+/modules/                   @D-2-G-8
+/services/                  @D-2-G-8
+/launcher/                  @D-2-G-8
+/sdk/                       @D-2-G-8
+
+# The lab. lab/runner/ and lab/guest/ are a security boundary — see ADR-006.
+/lab/                       @D-2-G-8
+/lab/runner/                @D-2-G-8
+/lab/guest/                 @D-2-G-8
+
+# Build, release and CI.
+/tools/                     @D-2-G-8
+/.github/                   @D-2-G-8
+/releases/                  @D-2-G-8
+/deps.lock.md               @D-2-G-8
+
+# Policy. Changes need an RFC and the maintainer council.
+/governance/                @D-2-G-8
+
+# Decisions and design. An ADR is superseded, never quietly rewritten.
+/docs/adr/                  @D-2-G-8
+/docs/techdoc.md            @D-2-G-8
+
+# Agent autonomy is not negotiable — ADR-008.
+# Anything here gets reviewed against it, by a human, every time.
+/services/brain/            @D-2-G-8
+/core/verbs/                @D-2-G-8
+
+# Recipes. Each recipe's owner is added on its own line as authors join:
+#   /recipes/<mod-id>/       @their-github-handle
+/recipes/                   @D-2-G-8

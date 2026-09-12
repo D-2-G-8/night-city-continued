@@ -1,0 +1,91 @@
+name: RFC — proposal
+description: Propose a change that needs a decision before code.
+labels: ["rfc"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An RFC is required for: a new module, a change to the core API or any schema, a new
+        system mechanic, anything that touches save data, and any policy change in
+        `governance/`.
+
+        Two things no RFC can propose, because they are settled (see `AGENTS.md`):
+        copying a third-party mod into the repository outside the recipe system, and
+        scripting NPC behaviour — schedules, behaviour trees, developer-set goals or an
+        allowed-action whitelist.
+
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - P — Platform
+        - E — Ecosystem
+        - T — Tooling
+        - W — World
+        - L — Life
+        - N — Narrative
+        - S — Systems
+        - I — Input and platforms
+        - M — Multiplayer
+        - C — Community
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong or missing today. Not the solution yet.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Including doing nothing, and why that is worse.
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: What this touches
+      description: Modules, packs, recipes, the core API, schemas.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: saves
+    attributes:
+      label: Save data impact
+      options:
+        - None
+        - Reads save data only
+        - Writes save data — needs a dataVersion bump and a migration
+    validations:
+      required: true
+
+  - type: textarea
+    id: migration
+    attributes:
+      label: Migration plan
+      description: Required if this writes save data. How an older save reaches the new version, and how golden saves prove it.
+    validations:
+      required: false
+
+  - type: textarea
+    id: lab
+    attributes:
+      label: Lab coverage
+      description: Which scenarios or points will show this working, and show it breaking.
+    validations:
+      required: true

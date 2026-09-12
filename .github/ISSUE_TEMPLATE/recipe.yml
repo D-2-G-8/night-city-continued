@@ -1,0 +1,77 @@
+name: Mod recipe — request or offer
+description: Propose adding a community mod to the distribution, or offer your own.
+labels: ["recipe"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **If this is your own mod:** you do not have to leave Nexus, change your license or
+        give up donations. Downloads of `linked` mods go through your pages and count for
+        you, and you can drop the tier or remove the recipe at any time.
+
+        **If it is someone else's:** we do not add a mod against its author's wishes. Without
+        a permissive license or written permission, the best it can reach is a compatibility
+        entry.
+
+  - type: input
+    id: mod
+    attributes:
+      label: Mod name and link
+      placeholder: "Example Mod — https://www.nexusmods.com/cyberpunk2077/mods/00000"
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Name, and how they can be contacted if known.
+    validations:
+      required: true
+
+  - type: input
+    id: license
+    attributes:
+      label: License
+      description: SPDX identifier if there is one, or a quote of the permissions text.
+      placeholder: "MIT / Apache-2.0 / 'no reuploading under any circumstances'"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: relationship
+    attributes:
+      label: Who is filing this
+      options:
+        - I am the author of this mod
+        - I have the author's written permission
+        - Neither — I am suggesting it
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Proposed tier
+      options:
+        - included — permissive license or written permission; we ship the files
+        - linked — free to download but not redistributable; we ship only the recipe
+        - compat — a compatibility entry and a lab scenario
+    validations:
+      required: true
+
+  - type: input
+    id: game-patch
+    attributes:
+      label: Game patch it is known to work on
+      placeholder: "2.31"
+    validations:
+      required: true
+
+  - type: textarea
+    id: lab
+    attributes:
+      label: How the lab should check it
+      description: A scenario, or a point in the world where the mod's effect is visible.
+    validations:
+      required: true

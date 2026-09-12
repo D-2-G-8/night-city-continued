@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Modding questions (REDengine, WolvenKit, frameworks)
+    url: https://wiki.redmodding.org/cyberpunk-2077-modding
+    about: The modding wiki answers engine and tooling questions faster than we can.
+  - name: Code of conduct report
+    url: https://github.com/D-2-G-8/night-city-continued/blob/main/governance/CODE_OF_CONDUCT.md
+    about: Reports go to the contact listed there, not to a public issue.

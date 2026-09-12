@@ -1,0 +1,89 @@
+name: Bug report
+description: Something in the platform, launcher, a module or a pack is broken.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: run `ncc logs --bundle` and attach the archive. It carries the
+        versions and the logs we would otherwise have to ask you for one at a time.
+
+  - type: input
+    id: release
+    attributes:
+      label: Release
+      description: Including the game-patch metadata, e.g. `0.1.0+cp2.31`.
+      placeholder: "0.1.0+cp2.31"
+    validations:
+      required: true
+
+  - type: input
+    id: game-build
+    attributes:
+      label: Game build
+      description: From `ncc doctor`.
+      placeholder: "2.31, build 5294808"
+    validations:
+      required: true
+
+  - type: textarea
+    id: modules
+    attributes:
+      label: Modules and recipes installed
+      description: With versions. `ncc doctor` prints them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Attach the `ncc logs --bundle` archive. Paste the relevant error inline if it is short.
+    validations:
+      required: false
+
+  - type: input
+    id: lab-run
+    attributes:
+      label: Lab run link
+      description: If this came out of a lab report, link it.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How bad is it
+      options:
+        - P0 — the game does not start, or saves are lost
+        - P1 — a feature is unusable, no workaround
+        - P2 — annoying, there is a workaround
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: install-mode
+    attributes:
+      label: How it is installed
+      options:
+        - label: Through the `ncc` launcher
+        - label: Through Vortex or MO2
+        - label: Manually

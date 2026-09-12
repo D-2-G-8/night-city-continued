@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/*.env)",
+      "Read(./**/secrets/**)",
+      "Read(./**/*.key)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.minisig.key)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Edit(./releases/**)",
+      "Write(./releases/**)",
+      "Edit(./governance/permissions/**)",
+      "Write(./governance/permissions/**)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git rebase:*)",
+      "Edit(./deps.lock.md)",
+      "Edit(./core/**)",
+      "Write(./core/**)",
+      "Edit(./lab/runner/**)",
+      "Write(./lab/runner/**)",
+      "Edit(./lab/guest/**)",
+      "Write(./lab/guest/**)",
+      "Edit(./governance/**)",
+      "Write(./governance/**)",
+      "Edit(./.github/workflows/**)",
+      "Write(./.github/workflows/**)"
+    ]
+  }
+}
