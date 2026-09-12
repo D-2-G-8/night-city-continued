@@ -31,6 +31,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Messages go back to an agent and into logs: English and UTF-8 regardless of the OS locale.
+[System.Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 function Get-EditedPath {
     if ($Path) { return $Path }
 
@@ -57,10 +61,15 @@ function Get-EditedPath {
 
 function Test-Json {
     param([string]$File)
+    # ConvertFrom-Json accepts trailing commas and comments, which every other JSON reader
+    # (the validator, CI, the launcher) rejects. System.Text.Json is strict.
     try {
-        Get-Content -LiteralPath $File -Raw -Encoding utf8 | ConvertFrom-Json | Out-Null
+        $text = Get-Content -LiteralPath $File -Raw -Encoding utf8
+        [System.Text.Json.JsonDocument]::Parse($text).Dispose()
         return $null
     } catch {
+        $inner = $_.Exception.InnerException
+        if ($inner) { return $inner.Message }
         return $_.Exception.Message
     }
 }
