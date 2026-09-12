@@ -63,9 +63,12 @@ Not shipped. Needed to build content and world changes.
 
 | Item | Version | Notes |
 |---|---|---|
-| Windows 11 Pro + Hyper-V | [pin] | Host. GPU-P is [spike] — see `docs/rfc/` |
+| Windows Server + Hyper-V | [pin] | Lab host. Whole-GPU passthrough (DDA), not GPU-P — see ADR-016 |
 | PresentMon | [pin] | FPS and frame times |
 | ffmpeg | [pin] | Screenshots and run video |
+
+Lab host hardware: dual AMD EPYC 7763 (128C/256T), 512 GB RAM, 2 TB SSD, 5 × RTX 5060 Ti
+16 GB. Three cards to game VMs, two to the `brain` VM. See ADR-016.
 
 ## Inference
 

@@ -34,6 +34,23 @@ A mention on the project site and in the monthly financial report. That is the w
 5. **No exclusivity.** Sponsoring the project does not buy the right to be the only sponsor,
    or the right to block another.
 
+## Hardware contributed by a participant
+
+Someone who works on the project may also provide infrastructure — the test lab currently
+runs on a contributor's machine in their home.
+
+The rules do not change because the person is one of us:
+
+- The contribution is **disclosed in the monthly report** like any other.
+- It grants **no influence over the roadmap, inclusion decisions or priorities**.
+- **Maintainer standing comes from the work someone does, never from the hardware they own.**
+  This matters most when the two are the same person, because that is where the distinction
+  quietly erodes.
+- Running costs that fall on a person — electricity, connectivity, replacement parts — are
+  legitimate infrastructure expenses for funding stage A, on the same terms as hosting.
+- Hardware already given stays with the project only if it was given; a machine someone
+  operates in their own home remains theirs, and they may stop at any time.
+
 ## How an offer is handled
 
 1. The offer is read against this file. If it carries any condition touching game content,

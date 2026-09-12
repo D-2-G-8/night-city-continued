@@ -19,10 +19,10 @@ Two rules decide whether a change can be accepted at all.
 mods are added through the recipe system, which records the source, the hash, the license and
 the author's links. See `recipes/AGENTS.md` and section 10 of the tech doc.
 
-**2. NPC behaviour is never written by hand.** Agents decide for themselves — that is the
-point of the project, not an implementation detail. No behaviour trees, no schedules, no
-developer-set goals, no whitelist of "allowed" actions. Extend what an agent *can* do and
-*can* perceive; never define what it *will* do. See ADR-008 and `services/brain/AGENTS.md`.
+**2. NPC behaviour is never written by hand.** Where the project has autonomous agents, they
+decide for themselves. No behaviour trees, no schedules, no developer-set goals, no whitelist
+of "allowed" actions. Extend what an agent *can* do and *can* perceive; never define what it
+*will* do. See ADR-008 and `services/brain/AGENTS.md`.
 
 ## Environment
 
@@ -61,8 +61,8 @@ Until it lands, `deps.lock.md` is the list of what to install.
    point. A change with no coverage ships untested, so it will be sent back.
 5. **Open a PR against `dev`.** Conventional Commits with a scope: `feat(residents):`,
    `recipe(example-mod):`, `fix(lab):`. PRs are squash-merged.
-6. **Wait for the lab.** A maintainer applies the `lab:run` label after reading the diff —
-   this is a security boundary, not a formality, since a run executes built artifacts.
+6. **Wait for the lab.** A maintainer applies the `lab:run` label after reading the diff.
+   A run executes built artifacts, so this review is a security boundary (ADR-006).
    The report comes back to the PR with screenshots, FPS against the baseline and log excerpts.
 
 ## Definition of Done
@@ -70,7 +70,8 @@ Until it lands, `deps.lock.md` is the list of what to install.
 - [ ] Cloud CI green: build, schemas, vanilla-node registry, license audit
 - [ ] Lab: declared scenarios passed, report attached to the PR
 - [ ] No new errors in the redscript, CET or RED4ext logs
-- [ ] If save data changed: `dataVersion` bumped, migration written, golden saves load
+- [ ] If save data changed: a named migration written, golden saves load, and an `on-removed`
+      path where the component can be uninstalled
 - [ ] The module, pack or recipe can be disabled without breaking a save
 - [ ] Patch notes and docs updated
 - [ ] License and attribution preserved
@@ -81,10 +82,14 @@ that is a separate PR with a reason, decided by a human.
 ## Adding a mod
 
 You do not have to leave Nexus, change your license or give up donations. Downloads of
-`linked` mods go through your own pages and count for you, and you can drop your mod to a
-lower tier or remove the recipe at any time.
+`linked` mods go through your own pages and count for you.
 
-Which tier applies depends on the license, not on preference:
+**You can have your mod removed at any time, at any tier, without giving a reason** — and we
+keep no archival copy to keep our releases working. `governance/author-rights.md` is the
+full list of what an author is entitled to here; it is one page and it is written for you,
+not for us.
+
+Which tier applies depends on the license and on your stated permissions, not on preference:
 
 | Tier | When |
 |---|---|
@@ -92,11 +97,49 @@ Which tier applies depends on the license, not on preference:
 | `linked` | Redistribution not allowed, but the mod is free. We ship only the recipe |
 | `compat` | Not included — a compatibility entry and a lab scenario |
 
+Permissions are read separately from the license. If you have said no modifications, we do
+not patch your mod — not even locally, not even for compatibility. Unstated permissions are
+treated as denied until we have asked.
+
+If you would rather not take part, nothing follows from that. **We do not build our own
+version of your mod because you said no** (ADR-022), and compatibility testing needs nothing
+from you at all.
+
 Start from `recipes/AGENTS.md` and the porting guide in `docs/guides/migrate-mod.md`.
 
-## Language
+## Language and naming
 
-Code, comments, documentation, commits and issues are written in **English**.
+**Everything in this repository is written in English** — code, identifiers, comments, commit
+messages, branch names, issues, pull requests, documentation, log and error strings, and file
+names.
+
+Contributors here are in different countries, and a comment a maintainer cannot read is a
+comment nobody can review. Write plainly: many readers are not native speakers, short
+sentences beat clever ones, and idioms do not travel.
+
+Player-facing text in the game is the exception — it is localisable, with English as the
+source language. A hardcoded player-facing string in any language is a bug.
+
+**File and directory names: lowercase `kebab-case`, ASCII only, no spaces.** This is not
+aesthetics. Windows treats `Recipe.yaml` and `recipe.yaml` as one file and Linux CI does not,
+so a wrong-case reference passes on every developer machine and fails only in CI. macOS and
+Linux store non-ASCII names in different Unicode forms, so the same name can arrive as two
+different byte sequences and git shows one file as both added and deleted.
+
+Every exception is a name some tool requires — root metadata files, `AGENTS.md` / `CLAUDE.md`
+/ `SKILL.md`, `.github/ISSUE_TEMPLATE/`, `PascalCase` for .NET projects, `snake_case` for
+identifiers inside game data. There are no exceptions of taste.
+
+Per-artifact naming — ADRs, migrations, recipes, facts, verbs, scripts — is in
+**`docs/guides/conventions.md`**. Read it before adding a new kind of file.
+
+## Licensing of contributions
+
+Code, SDK and schemas are **MIT**. Documentation prose is **CC BY 4.0**, and code samples
+inside documentation are MIT (ADR-020). Opening a pull request means contributing under those
+terms.
+
+Third-party mods are never relicensed: an author's licence travels with their files.
 
 ## Working with AI agents
 
