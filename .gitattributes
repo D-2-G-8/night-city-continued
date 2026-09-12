@@ -1,0 +1,60 @@
+# Normalise line endings.
+#
+# Contributors work on Windows, macOS and Linux, and CI runs on Linux. Without this,
+# whoever commits next rewrites every line of a file they barely touched, and the diff
+# stops being reviewable.
+#
+# Everything is LF in the repository. Git converts on checkout where a platform needs it.
+
+* text=auto eol=lf
+
+# PowerShell must be CRLF in the working tree on Windows. Some PowerShell hosts and
+# signing tooling are sensitive to this, and every .ps1 here runs on Windows.
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.psd1  text eol=crlf
+
+# Windows-only shell scripts.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# Explicit text, so no heuristic decides otherwise.
+*.md       text
+*.json     text
+*.yml      text
+*.yaml     text
+*.cs       text
+*.csproj   text
+*.sln      text eol=crlf
+*.reds     text
+*.lua      text
+*.xl       text
+*.patch    text eol=lf
+*.diff     text eol=lf
+
+# Binary. Never diffed, never converted.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.mp4   binary
+*.zip   binary
+*.7z    binary
+*.gguf  binary
+*.minisig binary
+
+# Game assets and builds are binary, whether or not they are tracked here.
+*.archive          binary
+*.mesh             binary
+*.xbm              binary
+*.streamingsector  binary
+*.questphase       binary
+*.scene            binary
+
+# Golden saves are Git LFS. Declared here so a save committed without LFS is visible
+# as a mistake rather than silently bloating history.
+tests/golden-saves/** filter=lfs diff=lfs merge=lfs -text
+
+# Keep generated and vendored files out of language statistics and diffs.
+docs/techdoc.md linguist-documentation
