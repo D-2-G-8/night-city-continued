@@ -2,8 +2,11 @@
 #
 # Who reviews what. A PR needs the review of the owner of every area it touches.
 #
-# Right now that is one person. As maintainers arrive, add them to the line for the area
-# they actually maintain — a recipe's owner is normally the mod's own author.
+# As maintainers arrive, add them to the line for the area they actually maintain — a
+# recipe's owner is normally the mod's own author.
+#
+# TODO: add the lab host operator's GitHub handle to the /lab/ lines. They own the hardware
+# the lab runs on (ADR-016) and operate the host.
 
 # Default owner for everything not claimed below.
 *                           @D-2-G-8

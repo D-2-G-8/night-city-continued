@@ -3,6 +3,8 @@
 > **Working title.** Status: preparing for launch. Document version: 0.4 (11.09.2026). Owner: Daria.
 > **Environment:** Windows 11 only — the game, development, builds, the lab and the services. The LLM inference host is a config value: the same PC, another machine on the LAN, or a cloud API.
 > **Markers in the text:** `[pin]` — a version to be filled in when dependencies are frozen in `deps.lock.md`; `[verify]` / `[spike]` — a claim or an approach that must be checked before it is built on.
+>
+> **Decisions:** `docs/adr/`. ADRs 009–015 came out of a review of how comparable projects solved the same problems — curated mod distributions, loaders that survive game patches, automated in-game testing, and published work on LLM-driven agents — and they extend several sections below.
 
 ---
 
@@ -102,8 +104,8 @@ Final priorities and owners come out of the polls (step 5). The list goes to the
 
 **The agent loop.**
 
-1. **Perception.** Only what the agent could physically have noticed: who is nearby and what they are doing (V included), gunshots, chases, conversations, place, time, weather, and their own state (health, money, inventory). There is no omniscience.
-2. **Memory.** A stream of observations scored for importance, periodic reflection (conclusions about themselves, about people, about the district), and relationships with other agents and with V.
+1. **Perception.** Only what the agent could physically have noticed: who is nearby and what they are doing (V included), gunshots, chases, conversations, place, time, weather, and their own state (health, money, inventory). There is no omniscience. Perception also includes an accurate account of **what this body can currently do** — the verbs available and whether each is feasible here and now — the way a person knows whether they can drive or whether the door in front of them is one they can open. That is the removal of a blind spot rather than a limit on the decision: an agent that knows it cannot fly can refuse, bargain, lie about why, or try anyway and fail, while an agent that does not know is simply wrong. A commitment made outside the vocabulary is logged to `unmet_intents` like any unmet intent.
+2. **Memory.** A stream of observations scored for importance, periodic reflection (conclusions about themselves, about people, about the district), and relationships with other agents and with V. Every memory carries **how the agent came by it** — observed, heard from a named source, or inferred — and reflection preserves that when it summarises. Agents can be lied to, which is worth keeping; provenance is what stops a lie from becoming history.
 3. **Internal state.** Personality, needs (food, sleep, money, safety, company), values and ambitions. All of it shifts with experience.
 4. **Decision.** The model forms its own goals and plan — "what am I doing for the next few hours, and why" — and revises it when something significant happens.
 5. **Action.** An intent is translated into engine commands. The result — whether it worked and why — comes back to the agent as a new observation.
@@ -131,9 +133,11 @@ There are no design-level prohibitions and no caps on what an agent may decide.
 
 **Unmet intents (L5).** When the model wants something the vocabulary has no verb for ("burn down the bar", "leave Night City"), the intent is written to the `unmet_intents` log with its context. The aggregate is published and feeds the backlog: the vocabulary grows in the direction agents are actually pulling.
 
+**World events are allowed; steering decisions is not** (ADR-015). A module may create, schedule or weight events and conditions in the world — a gang moving on a district, a police sweep, a blackout, prices, a bounty existing. Those reach agents through perception like anything else. Nothing may weight, veto, substitute or pre-empt what an agent decides. The test: if the mechanism were removed, would an agent's available choices change? If it only changes what the agent must respond to, it is world state; if it changes what the agent may choose, it is behaviour. Events are declared at the level of a place, a faction or a population, never a named agent — an event aimed at one agent and timed to force one outcome is behaviour writing with extra steps.
+
 **Story and keeping the game intact.**
 
-- The player settings carry a world mode [default value to be decided]:
+- The player settings carry a world mode, **defaulting to Canon** (ADR-017):
   - **Canon** — story NPCs obey an active quest scene while it runs, and are free outside it;
   - **Full freedom** — nobody is protected, and the main story can break.
 - During a cutscene or a scene graph the agent is paused, and afterwards receives an observation about what happened.
@@ -200,7 +204,7 @@ Game → `brain`, result:
 
 | Where | What |
 |---|---|
-| In game (Mod Settings) | `brain` address, world mode (Canon / Full freedom), agent density, module toggles, the debug overlay of agent thoughts and plans |
+| In game (Mod Settings) | `brain` address, world mode (**Canon by default**, Full freedom as an informed opt-in — ADR-017), agent density, module toggles, the debug overlay of agent thoughts and plans |
 | `%LOCALAPPDATA%\NCC\launcher.json` | Game path, channel (stable/beta), install mode, update auto-check |
 | `recipes/<id>/recipe.yaml` | An external mod's recipe: tier, source, license, patches, lab scenarios |
 | `content/<pack>/pack.json` | Pack manifest: dependencies, facts, sectors, lab points, license |
@@ -324,7 +328,7 @@ Game → `brain`, result:
 - platform code, SDK and schemas — MIT;
 - content packs and included mods — the author's license, recorded in the manifest; relicensing is forbidden;
 - derivatives of game assets — within CD Projekt Red's Fan Content Guidelines;
-- documentation — CC BY 4.0 [to be approved].
+- documentation — CC BY 4.0, with code samples inside it under MIT (ADR-020).
 
 ---
 
@@ -371,7 +375,7 @@ Game → `brain`, result:
 | Core API | `core-api/N` | `core-api/1` |
 | Pack and recipe schemas | `ncc-pack/N`, `ncc-recipe/N` | `ncc-recipe/1` |
 | `brain` contract | `api: vN` | `v1` |
-| Save data | `dataVersion` (integer) | `7` |
+| Save data | Named migrations per component, plus `dataVersion` as the release-level marker | `residents:0007-split-relationships` |
 | Game patch | `+cp` metadata | `0.4.1+cp2.31` |
 
 **Stability promise:** a pack or recipe built against schema `/1` works on every release that still supports `/1`. Support is removed no sooner than one major release after it is marked deprecated.
@@ -421,6 +425,14 @@ license:
   file: LICENSE
   audit: scancode        # result produced in CI
   permission: null       # or governance/permissions/example-mod.md
+permissions:             # transcribed from the author's own page — ADR-010
+  redistribute: allowed  # allowed | denied | unknown; unknown counts as denied
+  modify: allowed        # patches/ require this
+  convert: unknown
+  assets: denied
+  source: "https://www.nexusmods.com/cyberpunk2077/mods/<id>?tab=permissions"
+  checkedOn: 2026-09-12
+  checkedBy: "<maintainer>"
 authors:
   - name: "<author>"
     links:
@@ -484,11 +496,35 @@ lab:
   "compat": [{ "gamePatch": "2.31", "gameBuild": "5294808", "status": "supported" }],
   "requires": { "RED4ext": ">=1.30.0", "Codeware": ">=1.20.3" },
   "modules": { "core": "0.1.0" },
-  "recipes": { "example-mod": "1.4.2-r2" },
-  "files": [{ "path": "core-0.1.0.zip", "sha256": "…" }],
+  "recipes": {
+    "example-mod": { "version": "1.4.2-r2", "tier": "linked", "required": false }
+  },
+  "files": [{ "path": "core-0.1.0.zip", "sha256": "…", "required": true }],
   "patchNotes": "docs/patch-notes/0.1.0.md"
 }
 ```
+
+`required: false` marks a component the launcher may skip when it cannot be fetched or its
+hash no longer matches — always the case for `linked` recipes, whose files belong to their
+authors and can change or disappear at any time. The install then completes as **degraded**,
+naming what is missing. `core`, modules and `included` recipes are always `required: true`.
+
+**Pins addendum** — `releases/X.Y.Z.pins.json`, signed with the same key:
+
+```json
+{
+  "release": "0.1.0",
+  "revision": 3,
+  "pins": {
+    "example-mod": { "ref": "v1.4.3", "sha256": "…" }
+  }
+}
+```
+
+It carries refs and hashes and nothing else, so a third-party author publishing a new version
+of their own mod does not force a new release. The launcher accepts it when the signature
+verifies, the release matches, and `revision` is higher than the one already applied; the
+release manifest stays immutable and its signature stays valid. See ADR-009.
 
 ### 4.6. Building and local work (Windows, PowerShell)
 
@@ -556,6 +592,7 @@ What the launcher does on install:
 3. Verifies the manifest signature and the hashes, then snapshots the current install.
 4. Lays down modules and `included`-tier mods.
 5. For `linked`-tier mods it opens the author's page, waits for the file to appear in the downloads folder, verifies the hash and installs it. **The download counts for the author.**
+6. If a `required: false` component cannot be fetched or its hash does not match, it installs everything else and completes as **degraded**, naming what is missing. `ncc doctor` reports degraded components and what they disable. Hash checking is never relaxed — a component whose hash does not match is not installed at all (ADR-009).
 
 **Path B — Vortex.** A collection on Nexus; every release is a new collection revision.
 
@@ -592,6 +629,8 @@ What the launcher does on install:
 | PR | GitHub Actions (cloud) | Build what changed; pack and recipe validator; JSON and YAML schemas; vanilla node registry; ScanCode plus the license allowlist; .NET tests; artifacts for the lab |
 | `lab:run` label (maintainers only) | Self-hosted lab runner | Smoke scenario plus the scenarios of the affected mods, packs and recipes; report posted to the PR |
 | Nightly on `dev` | Lab | Full regression: every scenario, every golden save |
+| Scheduled | Cloud | Re-check every `linked` upstream; open an issue when a hash stops matching or a URL stops resolving; publish a pins addendum where appropriate (ADR-009) |
+| Scheduled | Cloud | Refresh the public compatibility table from lab results; mark stale entries `unknown` |
 | Push to `release/*` | Cloud | Beta build, pre-release, draft patch notes (git-cliff) |
 | Tag `release-*` | Cloud | Build, SHA-256, manifest signing, GitHub Release |
 | Manual | Cloud | Publishing to Nexus [through the API if the terms allow; otherwise by hand] |
@@ -601,7 +640,7 @@ What the launcher does on install:
 - `MINISIGN_KEY` — only in the release cloud environment;
 - the PR comment token — only on the lab host, never inside the VM;
 - `NEXUS_API_KEY` — optional;
-- Authenticode signing for the launcher — [decide: a certificate, or live with the SmartScreen warning].
+- Authenticode signing for the launcher — **0.1.0 ships unsigned** (ADR-019): the player guide states the warning plainly, every release publishes SHA-256 checksums and a minisign signature for the launcher itself, and Azure Trusted Signing is evaluated before 1.0.
 
 **Alternative:** orchestrate the lab through Jenkins with a Windows agent; GitHub would then only start the job and receive the report.
 
@@ -612,6 +651,12 @@ What the launcher does on install:
 3. Full regression across every module and recipe; authors of `linked` and `compat` mods get a compatibility report.
 4. `X.Y.Z+cp2.xx` ships, and a `compat` row is added to the manifest.
 5. Builds for 2.31 stay available for as long as that version is listed in `compat`.
+
+**The platform absorbs the churn where it can** (ADR-014). When a patch moves an engine symbol, path or structure that `core` exposes, core adapts and `core-api/N` keeps its shape, so a module built against it is not expected to know a patch happened. Patch-specific code paths in core are dated and removed one major release after the patch they compensate for.
+
+Whether third-party code can be redirected at load time — the way SMAPI rewrites Stardew Valley mods against a changed game — is **unknown on this engine and is a spike** [spike]. Nothing in the port process assumes it.
+
+Where a mod is broken by a patch and its author is absent, the recipe can point players at a community-maintained fix, subject to the author's permissions. An abandoned mod does not silently become a `compat` entry with no way forward.
 
 ### 5.6. Rollback
 
@@ -629,6 +674,7 @@ What the launcher does on install:
 |---|---|
 | Founder, architecture, release manager (at the start) | Daria |
 | Platform maintainers: core, launcher, lab, sdk, brain | Daria, [first contributors] |
+| Lab host operator | The contributor whose machine runs the lab (ADR-016): hardware, host OS, VM lifecycle, physical access |
 | Recipe owners | The mod's author, or an assigned maintainer |
 | Roadmap feature owners | Assigned from the poll results (step 5) |
 | Maintainer council (finance, contested RFCs) | 3–5 people; until it exists, the first contributors hold interim duties, see section 11 |
@@ -693,10 +739,15 @@ Contributor Covenant in `governance/CODE_OF_CONDUCT.md`, with a contact for repo
 
 **Hardware and environment.**
 
-- A dedicated Windows PC with a graphics card [model, VRAM]. The host is Windows 11 Pro with Hyper-V.
-- VM `lab-01` with GPU partitioning (GPU-P) [spike: game stability]. Fallback — a dedicated physical PC restored from a disk image before every run.
-- Inside the VM: the GOG build of the game 2.31 from the offline installer, the pinned frameworks, `ncc`, the harness mod, PresentMon, ffmpeg. Checkpoint `clean-2.31`.
-- The VM's network is an internal switch with no route out; the VM holds no tokens, keys or accounts.
+- Dual AMD EPYC 7763 (128 cores / 256 threads), 512 GB RAM, 2 TB SSD, **five RTX 5060 Ti 16 GB**. The host runs Windows Server with Hyper-V. The machine belongs to a contributor and sits in their home (ADR-016).
+- **A whole GPU per VM via Discrete Device Assignment (DDA)**, not GPU partitioning. Three cards drive three concurrent game VMs; two drive a `brain` VM for inference.
+- The `brain` VM sits on the same internal switch and **also has no route out** — a game VM testing the L track needs inference, and inference may not live on the host or outside the isolated network.
+- Inside a game VM: the GOG build of the game 2.31 from the offline installer, the pinned frameworks, `ncc`, the harness mod, PresentMon, ffmpeg. Checkpoint `clean-2.31`.
+- Game VMs use **differencing disks from one golden parent VHDX**. 2 TB is the binding constraint here, not the GPUs; a full install per VM does not fit alongside checkpoints, models and golden saves.
+- **Each VM is pinned to one NUMA node.** Cross-socket memory access on a dual-socket machine adds frame-time variance, and variance is what makes a numeric gate fire on its own.
+- No VM holds tokens, keys or accounts. The PR-comment token lives on the host only.
+- **Absolute frame rates here are lower than on a player's desktop** — EPYC is a server part and this game is sensitive to single-thread performance. Lab figures are regression signals against a baseline on the same hardware, and are never published as expected player performance.
+- **Lab availability is not guaranteed.** It is a machine in someone's home. Cloud CI — builds, schemas, license audit, .NET tests — never depends on it. When the lab is down, changes that declare lab coverage wait; documentation and non-game code merge on cloud CI alone. There is no override that merges a game-affecting change without its lab report.
 
 **A single MR run.**
 
@@ -745,17 +796,25 @@ Contributor Covenant in `governance/CODE_OF_CONDUCT.md`, with a contact for repo
 
 **The PR report:** a table of scenarios and their status; before/after screenshots per point; FPS (average and 1% low) against the baseline; log error excerpts; a link to the archive with the full run and a short video.
 
-**Throughput.** One graphics card means one run at a time, FIFO with priority for `hotfix/*`. Smoke run duration — [to be measured on the MVP]. Full regression runs nightly. Scaling means more hosts on the same scheme.
+**A crash does not end the run** (ADR-012). A run is a sequence of self-contained steps with a cursor the guest persists to disk after every step. When the game dies the supervisor captures the logs and the last screenshot, marks the step `crashed`, relaunches and continues at the next step. A step that crashes twice is marked `blocked` and skipped; the run ends when the steps or the per-scenario relaunch budget are exhausted. The harness signals an intentional exit explicitly, and any exit without that signal counts as a crash. Results are pulled to the host before the VM is rolled back.
+
+The report separates `passed`, `failed`, `crashed`, `blocked` and `not run`. A reviewer must never have to guess whether a missing result passed quietly or was never attempted.
+
+**Thresholds are measured before they are set.** A numeric gate that has not been validated for repeatability goes red on its own and teaches reviewers to ignore the report. Before enabling one, run the same revision repeatedly, measure the spread, and put the threshold outside it — recording the measurement next to the number. The same applies to SSIM: a visual check names the defect it looks for (a black face, a gap at the neck, a missing mesh, a hole in a facade), because "pixels changed" is noise.
+
+**Scenarios run in the load order `ncc` produces on a player's machine.** A run against a different order tests a configuration nobody has.
+
+**Throughput.** Three game VMs run concurrently, so smoke runs on pull requests no longer queue behind each other; `hotfix/*` still takes priority. Smoke run duration — [to be measured on the MVP]. Full regression runs nightly. Scaling means more hosts on the same scheme, each with its own purchased copy of the game.
 
 ### 7.3. Regression scenarios
 
 | Area | Cases |
 |---|---|
-| Updates | Update over every previous stable; rollback; unknown game patch; interrupted download |
-| Saves | A save from before the platform was installed; saves from past releases; removing a module or recipe and loading a save; migration chains |
+| Updates | Update over every previous stable; rollback; unknown game patch; interrupted download; a `linked` component unavailable; a `linked` component whose hash changed; a pins addendum that is valid, stale, mismatched, or carries fields it should not |
+| Saves | A save from before the platform was installed; saves from past releases; removing a module or recipe and loading a save (`on-removed`); reinstalling a component that was previously removed; migration chains; a migration already recorded is not run twice |
 | Recipes | An `included` mod with patches; a `linked` mod after a manual download; two mods touching the same resources |
 | World | Doors, interiors, collision in openings, occluders, facade LODs |
-| Life | Day cycle; `brain` unreachable (agents continue their last plan); timeouts; an invalid model response; a non-existent action → written to `unmet_intents`; Canon and Full freedom modes; a quest scene involving an agent; agents acting against each other and against V |
+| Life | Day cycle; `brain` unreachable (agents continue their last plan); timeouts; an invalid model response; a non-existent action → written to `unmet_intents`; Canon and Full freedom modes; a quest scene involving an agent; agents acting against each other and against V; **a crowd — several agents active near the player at once**, where comparable systems fail first; an agent asked by the player for something outside the vocabulary; an attempt to plant a false memory through conversation |
 | Narrative | Jobs from packs: start, failure, repeat; overlap with the game's own quests |
 | Integrations | cyberpunk-vr-port, the wheel mod, AMM, popular mod collections |
 
@@ -764,6 +823,7 @@ Contributor Covenant in `governance/CODE_OF_CONDUCT.md`, with a contact for repo
 - **Game:** every `compat` entry; currently 2.31 only.
 - **Dependencies:** strictly `deps.lock.md`.
 - **Matrix:** CI checks that the `requires` of every module, pack and recipe in the release manifest can be resolved.
+- **Public compatibility table:** every module, pack and recipe against every supported game patch — working, degraded, broken, unknown — with the date checked and a link to the lab run. Generated from lab results rather than maintained by hand, linked from the launcher and the site, and read by `ncc doctor` to explain to a player why something is not working. An entry whose last check is old displays as `unknown`, never as its last known state (ADR-014).
 - **Porting to a new patch:** a `port/cp*` branch, an updated lab image, full regression, reports to authors.
 
 ### 7.5. Release QA checklist
@@ -787,7 +847,7 @@ Contributor Covenant in `governance/CODE_OF_CONDUCT.md`, with a contact for repo
 
 | Challenge | Impact | Plan |
 |---|---|---|
-| Navmesh in new interiors: no documented way to generate one | NPCs walk in straight lines through obstacles | Spike, and ask in the RED Modding Discord; until then, workspots and teleport |
+| Navigation in new interiors: the engine has `.navmesh` and sectors can carry navigation, but no part of the workflow is documented | NPCs walk in straight lines through obstacles | **ADR-021 (Proposed)** — open questions in order, plus an interim constraint: custom interiors are designed to work without navigation (one room, workspots, teleport), and nothing may ship depending on agents pathing inside them |
 | Lip sync for runtime lines | Agents speak without facial animation | Research N4; subtitles and voice without facial animation for now |
 | Cost and latency of decisions for hundreds of agents | Inference cannot keep up with the city | Planning horizons, re-planning on events, LOD, a priority queue, models of different sizes |
 | Incoherent or looping agent behaviour | The city looks broken | Memory and reflection, metrics from the lab's simulation runs, iteration on models and prompts |
@@ -798,11 +858,19 @@ Contributor Covenant in `governance/CODE_OF_CONDUCT.md`, with a contact for repo
 | A native macOS build of the game | No ArchiveXL, no Codeware | The Windows build is what we support |
 | Fragility against game patches | Native plugins break | `compat`, a block in the launcher, `port/*` |
 | Loading a save programmatically in the lab | Automating runs | Spike in step 1; fallback — input automation |
-| The game in a VM with GPU partitioning | Whether the lab works at all | Spike in step 1; fallback — a physical PC restored from an image |
+| A crash ending a whole lab run | A crash early in a nightly regression hides every later result | Persisted step cursor, relaunch and continue; `blocked` after two crashes on one step (ADR-012) |
+| An upstream file changing or disappearing | A signed release stops installing, through no fault of the author | `required: false` for `linked` components, degraded install, signed pins addendum, scheduled upstream re-checks (ADR-009) |
+| Author permissions narrower than the license | Patching a mod whose author forbade modification | Permissions recorded per recipe and enforced by the validator; `unknown` counts as denied (ADR-010) |
+| Agents agreeing to what the engine cannot do | Players expect a character that talks freely to act freely; the gap is where the illusion fails | Vocabulary feasibility is part of perception; commitments outside the vocabulary are logged to `unmet_intents` (ADR-008) |
+| False memories planted through conversation | A crafted conversation becomes indistinguishable from something the agent witnessed | Memory records provenance — observed, heard from a source, or inferred — and reflection preserves it (ADR-008) |
+| Crowds of agents near the player | Where comparable LLM-NPC systems degrade first: stalled conversations, agents that stop answering | Standing crowd scenario in the lab; priority inference queue |
+| Cost of the nightly agent simulation | Published work reports thousands of dollars in tokens for 25 agents over two simulated days | Cost per simulated day is a tracked metric with a threshold set before the simulation is built |
+| The game in a VM with GPU partitioning | Whether the lab works at all | Resolved: whole-GPU passthrough (DDA) instead of partitioning, five discrete cards available (ADR-016). What remains is a one-off verification that a consumer NVIDIA card passes through correctly |
 | Native code from an MR in the lab | Host security | Maintainer approval, a disposable VM with no network and no secrets, artifacts only from cloud CI |
-| One graphics card in the lab | A queue of runs | Smoke on PRs, full regression nightly, more hosts as it grows |
+| Lab capacity | A queue of runs | Three concurrent game VMs; full regression nightly; more hosts as it grows |
+| The lab lives in one person's home | Infrastructure depends on one household's power and connectivity | Cloud CI never depends on the lab; lab downtime blocks only changes that declare lab coverage (ADR-016) |
 | Nexus API terms for direct downloads | The launcher cannot download from Nexus | GitHub as the source of truth; for `linked`, the author's page plus a hash check |
-| An unsigned launcher | SmartScreen warning | Decide on a certificate before the public release |
+| An unsigned launcher | SmartScreen warning | 0.1.0 ships unsigned with published checksums and a plain-language guide; revisited at 1.0 (ADR-019) |
 | Mixing the launcher with Vortex or MO2 | Files drift out of sync | Check-only mode |
 | Packs and mods fighting over the same resources | Broken locations | The `claimsVanillaNodes` registry, lab runs on combinations |
 | Voices of the original actors | Legal risk | Original or licensed voices only |
@@ -857,7 +925,8 @@ Dates assume evening work and are indicative; they are refined after step 1.
 | The lab spikes fail (GPU-P, loading a save) | An MVP without full automation | The fallbacks in section 8 |
 | A new game patch ships | Dependencies and mods break | `compat`, `port/*`, reports to authors |
 | Save migration bugs | Players lose progress | `dataVersion`, golden saves, launcher backups |
-| Scope growth at bus factor = 1 | Everything stops | A stepwise launch plan; first maintainers before content features |
+| Scope growth at a small bus factor | Everything stops | A stepwise launch plan; more maintainers before content features. Two people as of September 2026, with the lab host held by the second |
+| The lab depends on one contributor's machine and household | Loss of the test lab | Cloud CI is independent of it; the lab image and its game copy belong to that host and are not transferable, so a replacement host means new hardware and a new purchased copy (ADR-016) |
 | CD Projekt or Nexus change their position | The project or mods get taken down | Strictly free, no strings attached to content, policies monitored |
 
 ---
@@ -876,7 +945,19 @@ Open source does not mean the absence of copyright: the code stays the author's,
 | `linked` | Redistribution is not allowed, but the mod is free to download | The recipe only: link, hash, compatibility patches, scenarios | `ncc` opens the author's page and verifies the downloaded file |
 | `compat` | The author objects to inclusion, or has not answered | Only an entry in the compatibility table and a lab scenario | The player installs it themselves |
 
-**License allowlist for `included`** [to be approved]: MIT, BSD-2/3-Clause, Apache-2.0, MPL-2.0, ISC, GPL-3.0 and LGPL-3.0 (the module stays under its own license), CC BY 4.0 / CC BY-SA 4.0 (for non-code).
+**License allowlist for `included`** (ADR-018). Unconditional: MIT, MIT-0, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, 0BSD, MPL-2.0, CC0-1.0, Unlicense; CC-BY-4.0 for non-code. Conditional: GPL-3.0 and LGPL-3.0 only as separate artifacts, with our own code never linking against them; CC-BY-SA-4.0 for non-code only while we ship assets as released, since creating a derivative asset propagates share-alike. **Never accepted at any tier:** any `-NC` or `-ND` licence, and no licence at all.
+
+**Permissions are read separately from the license** (ADR-010). Upstream platforms let an author set redistribution, modification, conversion and asset use independently, and a permissive stance on one says nothing about the others. The recipe records them with a source link and the date they were checked, and the validator derives what we may do:
+
+| Operation | Requires |
+|---|---|
+| Tier `included` | `redistribute: allowed` |
+| Shipping anything in `patches/` | `modify: allowed` |
+| Unpacking or repacking upstream archives | `modify: allowed` |
+| A recipe for a mod ported to another game patch | `convert: allowed` |
+| Reusing a mod's assets in our content | `assets: allowed` |
+
+`unknown` counts as `denied`. A mod whose author forbids modification can still be `linked` — pinned, hash-verified, with lab scenarios — but it cannot carry our patches; where a patch would be needed to make it work, it becomes `compat` with the reason recorded publicly.
 
 **Rules:**
 
@@ -891,8 +972,10 @@ Open source does not mean the absence of copyright: the code stays the author's,
 
 - Joining the project does not require leaving Nexus, changing a license, or giving up donations.
 - Downloads of `linked` mods go through the authors' own pages.
-- An author may drop their mod to a lower tier or delete the recipe at any time.
+- **An author may have their mod removed at any time, at any tier, including a compatibility entry, without giving a reason** (ADR-011). No review, no appeal, no negotiation. Removed from `dev` the next working day and from the next release; the withdrawal is recorded in `governance/permissions/<mod-id>.md` with its date. **No archival copy is kept** to keep a release installable — ADR-009 is what makes releases survive a component disappearing. The route is published in `governance/author-rights.md`.
+- Inclusion at `included` is opt-in: it requires a permissive license or written permission, and is never inferred from silence.
 - An author who becomes the recipe owner decides which patches are accepted.
+- **Declining to take part is not met with our own version of their mod** (ADR-022). Reimplementing an idea is lawful and is not what this project does: "work with us or we will build it ourselves" is not an invitation. The `compat` tier needs nothing from an author, so a refusal never blocks compatibility testing.
 
 ### 10.4. What we offer modders (step 6)
 

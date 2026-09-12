@@ -16,6 +16,10 @@ PC patch (2.31, September 2025). It is **not a single mod**. It is:
 Unofficial fan project. Not affiliated with CD Projekt Red.
 
 Full design document: `docs/techdoc.md`. Decisions: `docs/adr/`. Proposals: `docs/rfc/`.
+What a mod author is entitled to: `governance/author-rights.md`.
+
+No track is the project's headline. Priorities come from the community (polls, then the
+roadmap), and the tracks are listed in the tech doc, section 2.1.
 
 ## Environment
 
@@ -58,7 +62,18 @@ pwsh ./tools/release.ps1 -Release <X.Y.Z> -Channel beta
 - **Commits:** Conventional Commits with a scope — `feat(residents):`, `recipe(example-mod):`, `fix(lab):`.
 - **Versions:** SemVer per module. Releases add game-patch metadata: `0.4.1+cp2.31`.
   Schemas are versioned separately: `core-api/1`, `ncc-pack/1`, `ncc-recipe/1`, `brain api: v1`.
-- **Language:** English for code, comments, docs, commits and issues.
+- **Language:** **English everywhere** — code, identifiers, comments, commits, branches,
+  issues, pull requests, documentation, log and error strings, and file names. Contributors
+  are in different countries; a comment a maintainer cannot read is a comment nobody can
+  review. Player-facing text is localisable, with English as the source language.
+- **File and directory names:** lowercase `kebab-case`, ASCII only, no spaces. Windows is
+  case-insensitive and Linux CI is not, so wrong case passes locally and fails only in CI;
+  macOS and Linux normalise non-ASCII names differently, so the same name arrives as two
+  different byte sequences. Exceptions are only names a tool
+  requires: root metadata files, `AGENTS.md` / `CLAUDE.md` / `SKILL.md`,
+  `.github/ISSUE_TEMPLATE/`, `PascalCase` for .NET projects, and `snake_case` for identifiers
+  inside game data.
+- Full rules and per-artifact naming: `docs/guides/conventions.md`.
 
 ## Hard rules
 
@@ -66,7 +81,8 @@ These are not style preferences. Breaking one of these breaks the project.
 
 1. **Never copy another author's mod into this repository** outside the recipe system.
    Open source does not mean "no copyright", and a public repo without a license grants
-   no rights. See `recipes/AGENTS.md`.
+   no rights. Permissions are read separately from the license, and unstated means denied.
+   See `recipes/AGENTS.md`, ADR-005 and ADR-010.
 2. **Never write NPC behaviour.** Agents decide for themselves — see ADR-008 and
    `services/brain/AGENTS.md`. Do not add behaviour trees, schedules, goals, or a
    whitelist of "allowed" actions. Extend what agents *can* do, never what they *will* do.
@@ -76,23 +92,30 @@ These are not style preferences. Breaking one of these breaks the project.
    no paid priority. No brand placement or paid content of any kind, at any price.
    See `governance/donations.md`.
 5. **Never clone the voices of the game's original actors.** Only original or licensed voices.
-6. **Never change a save-data structure without a migration.** See `core/AGENTS.md`.
+6. **Never change a save-data structure without a migration.** Migrations are named and
+   recorded in the save, not driven by a version counter. See `core/AGENTS.md` and ADR-013.
 7. **Never redistribute extracted game assets** as standalone files.
+8. **Never keep a copy of a third-party mod so that a release keeps working.** An author who
+   removes their work has exercised a right this project guarantees. See ADR-011.
+9. **Never rebuild a living mod to replace it.** Reimplementing someone's idea is legal and
+   it is not what this project does. An author declining to take part is not a reason — the
+   `compat` tier needs nothing from them. See ADR-022.
 
 ## Definition of Done
 
 - [ ] Cloud CI green: build, schemas, vanilla-node registry, license audit
 - [ ] Lab: declared scenarios passed, report attached to the PR
 - [ ] No new errors in redscript, CET or RED4ext logs
-- [ ] If save data changed: `dataVersion` bumped, migration written, golden saves load
+- [ ] If save data changed: a named migration written, golden saves load, and an `on-removed`
+      path where the component can be uninstalled
 - [ ] The module, pack or recipe can be disabled without breaking a save
 - [ ] Patch notes and docs updated
 - [ ] License and attribution preserved
 
 ## When unsure
 
-- Ask before: changing `core-api`, any schema, `dataVersion`, `deps.lock.md`,
-  anything in `governance/`, or the license tier of a recipe.
+- Ask before: changing `core-api`, any schema, save-data structures, `deps.lock.md`,
+  anything in `governance/`, or the tier or permissions of a recipe.
 - These need an RFC in `docs/rfc/` before code.
 - For REDengine modding questions, use the modding wiki (`wiki.redmodding.org`)
   rather than guessing — it exposes `llms.txt` and markdown pages for agents.

@@ -34,4 +34,11 @@ Follow the runbook in `docs/runbooks/facade-to-interior.md`. The parts most ofte
 - Copy a vanilla mesh to your own path before editing. Overwriting the original changes
   every building in the city that uses it.
 - Removing the visible mesh is not enough — the collider and the occluders are separate nodes.
-- New interiors have no navmesh. Design around workspots until that is solved.
+- **New interiors have no navigation data, and there is no documented way to supply it**
+  (ADR-021, Proposed). Without it an NPC walks straight at its target, through furniture and
+  walls. Until that ADR is settled: design a custom interior as **one room, with residents in
+  workspots**, and teleport only where movement is unavoidable and unobserved. **No pack,
+  module or scenario may ship depending on an agent pathing inside a custom interior.**
+- "Custompathing" in this community means giving an asset your own **file path**, not
+  navigation. Two unrelated things with confusingly similar names — write "navigation" when
+  that is what you mean.
